@@ -806,17 +806,9 @@ app.post('/sendAircraftCompanies',function(req,response){
   response.send({message:"done"})
 })
 
-const { exec } = require('child_process');
-const axios = require('axios');
-
+const { exec: executeCommand } = require('child_process');
 app.get('/stop', function (req, response) {
-  let cmd;
-
-  if (process.platform === 'win32') {
-    cmd = 'taskkill /IM python.exe /F'; // Windows
-  } else {
-    cmd = 'pkill Python'; // Linux/Mac
-  }
+  let cmd = process.platform === 'win32' ? 'taskkill /IM python.exe /F' : 'pkill Python';
 
   exec(cmd, (error, stdout, stderr) => {
     if (error) {
@@ -866,12 +858,16 @@ app.get('/getCharts',function(req,res){
   })
 })
 
-app.get('/getManufacturers',function(req,res){
-  renderManufacturers()
-  .then(function(data){
-    res.json(data)
-  })
-})
+app.get('/getManufacturers', async function (req, res) {
+  try {
+    const data = await renderManufacturers();
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching manufacturers:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 app.get('/getAirbusModels',function(req,res){
   renderAirbusModels()
